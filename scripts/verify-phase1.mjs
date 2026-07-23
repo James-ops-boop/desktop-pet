@@ -27,6 +27,7 @@ const petMenu = readText("../src/windows/pet/petContextMenu.ts");
 const settingsStore = readText(
   "../src/services/settings-store/settingsStore.ts",
 );
+const rustSettings = readText("../src-tauri/src/settings/mod.rs");
 
 const windows = new Map(
   tauriConfig.app.windows.map((windowConfig) => [
@@ -68,20 +69,11 @@ assert.ok(
 );
 for (const capability of [petCapability, settingsCapability]) {
   assert.ok(
-    !capability.permissions.includes("store:default"),
-    "window capabilities must not inherit destructive Store commands",
+    !capability.permissions.some((permission) =>
+      permission.startsWith("store:"),
+    ),
+    "frontend windows must not receive direct Store access",
   );
-  for (const permission of [
-    "store:allow-load",
-    "store:allow-get",
-    "store:allow-set",
-    "store:allow-save",
-  ]) {
-    assert.ok(
-      capability.permissions.includes(permission),
-      `settings persistence requires ${permission}`,
-    );
-  }
 }
 
 for (const command of [
@@ -156,8 +148,8 @@ assert.match(
 
 assert.match(
   settingsStore,
-  /settings\.json/,
-  "the unified store must use settings.json",
+  /load_app_settings/,
+  "the frontend settings repository must use the trusted Rust service",
 );
 assert.match(
   settingsStore,
@@ -165,7 +157,12 @@ assert.match(
   "stored settings must be validated before use",
 );
 assert.match(
-  settingsStore,
+  rustSettings,
+  /settings\.json/,
+  "the unified store must use settings.json",
+);
+assert.match(
+  rustSettings,
   /store\.save\(\)/,
   "settings writes must explicitly reach disk",
 );

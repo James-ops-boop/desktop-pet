@@ -57,31 +57,17 @@ assert.deepEqual(
   ["pet"],
   "the pet capability must target the pet window",
 );
-for (const permission of [
-  "store:allow-load",
-  "store:allow-get",
-  "store:allow-set",
-  "store:allow-save",
-]) {
-  assert.ok(
-    petCapability.permissions.includes(permission),
-    `the pet requires ${permission}`,
-  );
-}
 assert.deepEqual(
   settingsCapability.windows,
   ["settings"],
   "the settings capability must target the settings window",
 );
-for (const permission of [
-  "store:allow-load",
-  "store:allow-get",
-  "store:allow-set",
-  "store:allow-save",
-]) {
+for (const capability of [petCapability, settingsCapability]) {
   assert.ok(
-    settingsCapability.permissions.includes(permission),
-    `the settings window requires ${permission}`,
+    !capability.permissions.some((permission) =>
+      permission.startsWith("store:"),
+    ),
+    "Store access must stay in the trusted Rust process",
   );
 }
 assert.match(

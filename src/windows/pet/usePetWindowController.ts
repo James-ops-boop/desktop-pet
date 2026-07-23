@@ -3,12 +3,26 @@ import type { MouseEvent as ReactMouseEvent } from "react";
 import type { UnlistenFn } from "@tauri-apps/api/event";
 import {
   getCurrentWindow,
+  LogicalSize,
   PhysicalPosition,
 } from "@tauri-apps/api/window";
+import type { AppSettings } from "../../models/settings";
+import { centerPetWindowWithoutSaving } from "../../services/window/windowCommands";
 import { useAppSettings } from "../../state/useAppSettings";
 
 const POSITION_SAVE_DELAY_MS = 220;
+const PET_DESIGN_SIZE = 380;
 const petWindow = getCurrentWindow();
+
+async function applyWindowAppearance(settings: AppSettings) {
+  await petWindow.setSize(
+    new LogicalSize(
+      PET_DESIGN_SIZE * settings.petScale,
+      PET_DESIGN_SIZE * settings.petScale,
+    ),
+  );
+  await petWindow.setAlwaysOnTop(settings.alwaysOnTop);
+}
 
 export function usePetWindowController() {
   const { settings, error: settingsError, update } = useAppSettings();
@@ -18,7 +32,30 @@ export function usePetWindowController() {
   >("idle");
   const latestSettingsRef = useRef(settings);
   const initializedRef = useRef(false);
+  const saveTimerRef = useRef<number | undefined>(undefined);
+  const lastPositionRef = useRef<PhysicalPosition | undefined>(
+    undefined,
+  );
+  const positionGenerationRef = useRef(0);
+  const appearanceQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const lastObservedSettingsRef = useRef<AppSettings | undefined>(
+    undefined,
+  );
+  const lastAppearanceTargetRef = useRef<AppSettings | undefined>(
+    undefined,
+  );
   const ready = settings !== undefined;
+
+  const cancelPendingPositionSave = useCallback(() => {
+    positionGenerationRef.current += 1;
+    lastPositionRef.current = undefined;
+
+    if (saveTimerRef.current !== undefined) {
+      window.clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = undefined;
+      setPositionStatus("idle");
+    }
+  }, []);
 
   useEffect(() => {
     latestSettingsRef.current = settings;
@@ -32,13 +69,20 @@ export function usePetWindowController() {
     initializedRef.current = true;
     let active = true;
     let unlistenMoved: UnlistenFn | undefined;
-    let saveTimer: number | undefined;
-    let lastPosition: PhysicalPosition | undefined;
 
     async function initializeWindow() {
       const initialSettings = latestSettingsRef.current;
       if (!initialSettings) {
         return;
+      }
+
+      lastObservedSettingsRef.current = initialSettings;
+      lastAppearanceTargetRef.current = initialSettings;
+      try {
+        await applyWindowAppearance(initialSettings);
+      } catch (caught) {
+        lastAppearanceTargetRef.current = undefined;
+        throw caught;
       }
 
       if (
@@ -52,28 +96,34 @@ export function usePetWindowController() {
             initialSettings.petPositionY,
           ),
         );
+      } else {
+        await centerPetWindowWithoutSaving();
       }
 
-      if (!active) {
-        return;
-      }
-
-      unlistenMoved = await petWindow.onMoved(({ payload }) => {
+      const listener = await petWindow.onMoved(({ payload }) => {
         const currentSettings = latestSettingsRef.current;
         if (!currentSettings?.rememberPosition) {
           return;
         }
 
-        lastPosition = payload;
+        const generation = positionGenerationRef.current + 1;
+        positionGenerationRef.current = generation;
+        lastPositionRef.current = payload;
         setPositionStatus("pending");
 
-        if (saveTimer !== undefined) {
-          window.clearTimeout(saveTimer);
+        if (saveTimerRef.current !== undefined) {
+          window.clearTimeout(saveTimerRef.current);
         }
 
-        saveTimer = window.setTimeout(() => {
-          const position = lastPosition;
-          if (!position) {
+        saveTimerRef.current = window.setTimeout(() => {
+          saveTimerRef.current = undefined;
+          const position = lastPositionRef.current;
+          const latestSettings = latestSettingsRef.current;
+          if (
+            !position ||
+            !latestSettings?.rememberPosition ||
+            generation !== positionGenerationRef.current
+          ) {
             return;
           }
 
@@ -93,9 +143,18 @@ export function usePetWindowController() {
             });
         }, POSITION_SAVE_DELAY_MS);
       });
+
+      if (!active) {
+        listener();
+        return;
+      }
+
+      unlistenMoved = listener;
     }
 
-    void initializeWindow().catch((caught) => {
+    const initialization = initializeWindow();
+    appearanceQueueRef.current = initialization.catch(() => undefined);
+    void initialization.catch((caught) => {
       if (active) {
         setWindowError(String(caught));
       }
@@ -104,11 +163,68 @@ export function usePetWindowController() {
     return () => {
       active = false;
       unlistenMoved?.();
-      if (saveTimer !== undefined) {
-        window.clearTimeout(saveTimer);
-      }
+      cancelPendingPositionSave();
     };
-  }, [ready, update]);
+  }, [cancelPendingPositionSave, ready, update]);
+
+  useEffect(() => {
+    if (!settings || !initializedRef.current) {
+      return;
+    }
+
+    const nextSettings = settings;
+    const previous = lastObservedSettingsRef.current;
+    lastObservedSettingsRef.current = nextSettings;
+
+    if (
+      !nextSettings.rememberPosition ||
+      (previous &&
+        (previous.petPositionX !== nextSettings.petPositionX ||
+          previous.petPositionY !== nextSettings.petPositionY))
+    ) {
+      cancelPendingPositionSave();
+    }
+
+    const appearanceTarget = lastAppearanceTargetRef.current;
+    if (
+      !appearanceTarget ||
+      appearanceTarget.petScale !== nextSettings.petScale ||
+      appearanceTarget.alwaysOnTop !== nextSettings.alwaysOnTop
+    ) {
+      const appearanceSettings = nextSettings;
+      lastAppearanceTargetRef.current = appearanceSettings;
+      appearanceQueueRef.current = appearanceQueueRef.current
+        .catch(() => undefined)
+        .then(async () => {
+          await applyWindowAppearance(appearanceSettings);
+          setWindowError(undefined);
+        })
+        .catch((caught) => {
+          if (
+            lastAppearanceTargetRef.current === appearanceSettings
+          ) {
+            lastAppearanceTargetRef.current = undefined;
+          }
+          setWindowError(String(caught));
+        });
+    }
+
+    if (
+      previous &&
+      !previous.rememberPosition &&
+      nextSettings.rememberPosition
+    ) {
+      void petWindow
+        .outerPosition()
+        .then((position) =>
+          update({
+            petPositionX: position.x,
+            petPositionY: position.y,
+          }),
+        )
+        .catch((caught) => setWindowError(String(caught)));
+    }
+  }, [cancelPendingPositionSave, settings, update]);
 
   const startDrag = useCallback(
     async (event: ReactMouseEvent<HTMLElement>) => {
@@ -145,11 +261,29 @@ export function usePetWindowController() {
     await update({ positionLocked: !current.positionLocked });
   }, [update]);
 
+  const toggleAlwaysOnTop = useCallback(async () => {
+    const current = latestSettingsRef.current;
+    if (!current) {
+      return;
+    }
+
+    await update({ alwaysOnTop: !current.alwaysOnTop });
+  }, [update]);
+
+  const setPetScale = useCallback(
+    async (petScale: number) => {
+      await update({ petScale });
+    },
+    [update],
+  );
+
   return {
     settings,
     error: windowError ?? settingsError,
     positionStatus,
     startDrag,
     togglePositionLock,
+    toggleAlwaysOnTop,
+    setPetScale,
   };
 }

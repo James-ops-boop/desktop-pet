@@ -30,10 +30,10 @@
       },
       {
         "label": "settings",
-        "title": "Shadow Companion",
+        "title": "Shadow Companion 设置",
         "url": "index.html",
-        "width": 760,
-        "height": 540,
+        "width": 920,
+        "height": 640,
         "minWidth": 640,
         "minHeight": 460,
         "center": true,

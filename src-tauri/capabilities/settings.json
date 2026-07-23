@@ -4,11 +4,5 @@
   "description": "Main settings window access to the unified settings store",
   "windows": ["settings"],
   "platforms": ["windows"],
-  "permissions": [
-    "core:default",
-    "store:allow-load",
-    "store:allow-get",
-    "store:allow-set",
-    "store:allow-save"
-  ]
+  "permissions": ["core:default"]
 }

@@ -12,6 +12,14 @@ export function minimizeSettingsWindow(): Promise<void> {
   return invoke("minimize_settings");
 }
 
+export function centerPetWindow(): Promise<void> {
+  return invoke("center_pet");
+}
+
+export function centerPetWindowWithoutSaving(): Promise<void> {
+  return invoke("center_pet_without_saving");
+}
+
 export async function exitApplication(): Promise<void> {
   try {
     await invoke("exit_application");

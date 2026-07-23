@@ -1,65 +1,115 @@
-import { load, type Store } from "@tauri-apps/plugin-store";
+import { invoke } from "@tauri-apps/api/core";
+import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { DEFAULT_APP_SETTINGS } from "../../config/defaultSettings";
 import {
-  mergeAppSettings,
   normalizeAppSettings,
   type AppSettings,
   type AppSettingsPatch,
 } from "../../models/settings";
+import { areJsonValuesEquivalent } from "../../state/settingsSnapshot";
 
 export const SETTINGS_STORE_PATH = "settings.json";
-const SETTINGS_KEY = "appSettings";
+export const SETTINGS_CHANGED_EVENT = "app-settings://changed";
 
-let storePromise: Promise<Store> | undefined;
-let writeQueue: Promise<void> = Promise.resolve();
-
-function getStore(): Promise<Store> {
-  storePromise ??= load(SETTINGS_STORE_PATH, {
-    autoSave: false,
-    defaults: {
-      [SETTINGS_KEY]: DEFAULT_APP_SETTINGS,
-    },
-  });
-
-  return storePromise;
+export interface SettingsSnapshot {
+  revision: number;
+  settings: AppSettings;
 }
 
-function sameSettings(left: unknown, right: AppSettings): boolean {
-  return JSON.stringify(left) === JSON.stringify(right);
+interface RawSettingsSnapshot {
+  revision: number;
+  settings: unknown;
 }
 
-async function writeSettings(settings: AppSettings): Promise<void> {
-  const store = await getStore();
-  await store.set(SETTINGS_KEY, settings);
-  await store.save();
+const SETTINGS_REVISION_CONFLICT = "settings revision conflict";
+const MAX_REPAIR_ATTEMPTS = 3;
+
+function normalizeSnapshot(snapshot: RawSettingsSnapshot): SettingsSnapshot {
+  return {
+    revision: snapshot.revision,
+    settings: normalizeAppSettings(snapshot.settings),
+  };
 }
 
-export async function loadAppSettings(): Promise<AppSettings> {
-  const store = await getStore();
-  const stored = await store.get<unknown>(SETTINGS_KEY);
-  const normalized = normalizeAppSettings(stored);
+async function repairSnapshot(
+  snapshot: RawSettingsSnapshot,
+  attempt = 0,
+): Promise<SettingsSnapshot> {
+  const normalized = normalizeSnapshot(snapshot);
 
-  if (!sameSettings(stored, normalized)) {
-    await writeSettings(normalized);
+  if (
+    !areJsonValuesEquivalent(snapshot.settings, normalized.settings)
+  ) {
+    try {
+      const repaired = await invoke<RawSettingsSnapshot>(
+        "replace_app_settings",
+        {
+          settings: normalized.settings,
+          expectedRevision: snapshot.revision,
+        },
+      );
+      return normalizeSnapshot(repaired);
+    } catch (caught) {
+      if (
+        String(caught).includes(SETTINGS_REVISION_CONFLICT) &&
+        attempt < MAX_REPAIR_ATTEMPTS
+      ) {
+        const current = await invoke<RawSettingsSnapshot>(
+          "load_app_settings",
+        );
+        return repairSnapshot(current, attempt + 1);
+      }
+
+      throw caught;
+    }
   }
 
   return normalized;
 }
 
-export function updateAppSettings(
-  patch: AppSettingsPatch,
-): Promise<AppSettings> {
-  const operation = writeQueue.then(async () => {
-    const current = await loadAppSettings();
-    const next = mergeAppSettings(current, patch);
-    await writeSettings(next);
-    return next;
-  });
+export async function loadAppSettingsSnapshot(): Promise<SettingsSnapshot> {
+  const snapshot = await invoke<RawSettingsSnapshot>("load_app_settings");
+  return repairSnapshot(snapshot);
+}
 
-  writeQueue = operation.then(
-    () => undefined,
-    () => undefined,
+export async function loadAppSettings(): Promise<AppSettings> {
+  return (await loadAppSettingsSnapshot()).settings;
+}
+
+export async function updateAppSettings(
+  patch: AppSettingsPatch,
+): Promise<SettingsSnapshot> {
+  const snapshot = await invoke<RawSettingsSnapshot>("patch_app_settings", {
+    patch,
+  });
+  return repairSnapshot(snapshot);
+}
+
+export async function replaceAppSettings(
+  settings: AppSettings,
+): Promise<SettingsSnapshot> {
+  const normalized = normalizeAppSettings(settings);
+  const snapshot = await invoke<RawSettingsSnapshot>(
+    "replace_app_settings",
+    { settings: normalized, expectedRevision: null },
   );
 
-  return operation;
+  return normalizeSnapshot(snapshot);
+}
+
+export function resetAppSettings(): Promise<SettingsSnapshot> {
+  return replaceAppSettings(
+    normalizeAppSettings(DEFAULT_APP_SETTINGS),
+  );
+}
+
+export function subscribeAppSettings(
+  listener: (snapshot: SettingsSnapshot) => void,
+): Promise<UnlistenFn> {
+  return listen<RawSettingsSnapshot>(
+    SETTINGS_CHANGED_EVENT,
+    ({ payload }) => {
+      listener(normalizeSnapshot(payload));
+    },
+  );
 }

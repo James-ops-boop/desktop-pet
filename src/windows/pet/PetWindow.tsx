@@ -1,4 +1,4 @@
-import type { MouseEvent } from "react";
+import type { CSSProperties, MouseEvent } from "react";
 import {
   exitApplication,
   showSettingsWindow,
@@ -7,6 +7,11 @@ import { popupPetContextMenu } from "./petContextMenu";
 import { usePetWindowController } from "./usePetWindowController";
 import "./pet-window.css";
 
+type PetWindowStyle = CSSProperties & {
+  "--pet-scale": number;
+  "--pet-opacity": number;
+};
+
 export function PetWindow() {
   const {
     settings,
@@ -14,15 +19,25 @@ export function PetWindow() {
     positionStatus,
     startDrag,
     togglePositionLock,
+    toggleAlwaysOnTop,
+    setPetScale,
   } = usePetWindowController();
 
   async function openContextMenu(event: MouseEvent<HTMLElement>) {
     event.preventDefault();
 
     await popupPetContextMenu({
+      petScale: settings?.petScale ?? 1,
+      alwaysOnTop: settings?.alwaysOnTop ?? true,
       positionLocked: settings?.positionLocked ?? false,
       onOpenSettings: () => {
         void showSettingsWindow();
+      },
+      onSetScale: (scale) => {
+        void setPetScale(scale);
+      },
+      onToggleAlwaysOnTop: () => {
+        void toggleAlwaysOnTop();
       },
       onTogglePositionLock: () => {
         void togglePositionLock();
@@ -33,36 +48,44 @@ export function PetWindow() {
     });
   }
 
+  const style: PetWindowStyle = {
+    "--pet-scale": settings?.petScale ?? 1,
+    "--pet-opacity": settings?.petOpacity ?? 1,
+  };
+
   return (
     <main
       className={`pet-window ${
         settings?.positionLocked ? "pet-window--locked" : ""
       }`}
+      style={style}
       onContextMenu={(event) => {
         void openContextMenu(event);
       }}
       aria-label="Shadow Companion desktop pet placeholder"
     >
-      <div className="pet-aura" aria-hidden="true" />
-      <section className="pet-placeholder">
-        <div className="pet-hood">
-          <div className="pet-face" aria-hidden="true">
-            <span />
-            <span />
-            <span />
+      <div className="pet-visual">
+        <div className="pet-aura" aria-hidden="true" />
+        <section className="pet-placeholder">
+          <div className="pet-hood">
+            <div className="pet-face" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </div>
           </div>
-        </div>
-        <div className="pet-shoulders" aria-hidden="true" />
-        <div className="pet-desk" aria-hidden="true" />
-        <div className="pet-caption">
-          <strong>OMEN · 占位桌宠</strong>
-          <span>
-            {settings?.positionLocked
-              ? "位置已锁定 · 右键解锁"
-              : "拖动移动 · 右键菜单"}
-          </span>
-        </div>
-      </section>
+          <div className="pet-shoulders" aria-hidden="true" />
+          <div className="pet-desk" aria-hidden="true" />
+          <div className="pet-caption">
+            <strong>OMEN · 占位桌宠</strong>
+            <span>
+              {settings?.positionLocked
+                ? "位置已锁定 · 右键解锁"
+                : "拖动移动 · 右键菜单"}
+            </span>
+          </div>
+        </section>
+      </div>
 
       <div className="pet-status" aria-live="polite">
         {positionStatus === "dragging" ? "拖动请求已触发" : null}

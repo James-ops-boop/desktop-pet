@@ -1,17 +1,71 @@
-import { useEffect } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { getCurrentWindow } from "@tauri-apps/api/window";
+import { ConfirmDialog } from "../../components/settings/SettingsControls";
+import { AboutPage } from "../../pages/about/AboutPage";
+import { CharactersPage } from "../../pages/characters/CharactersPage";
+import { GeneralPage } from "../../pages/general/GeneralPage";
+import { LifeModePage } from "../../pages/life-mode/LifeModePage";
+import { PerformancePage } from "../../pages/performance/PerformancePage";
+import { PetSettingsPage } from "../../pages/pet/PetSettingsPage";
+import { SyncModePage } from "../../pages/sync-mode/SyncModePage";
+import type { AppSettingsPatch } from "../../models/settings";
+import {
+  isLaunchAtStartupEnabled,
+  setLaunchAtStartup,
+} from "../../services/startup/startupService";
+import {
+  centerPetWindow,
   exitApplication,
-  hideSettingsWindow,
-  minimizeSettingsWindow,
 } from "../../services/window/windowCommands";
 import { useAppSettings } from "../../state/useAppSettings";
+import { SettingsSidebar } from "./SettingsSidebar";
+import {
+  SETTINGS_NAVIGATION,
+  type SettingsPageId,
+} from "./settingsNavigation";
 import "./settings-window.css";
 
 const settingsWindow = getCurrentWindow();
 
+const SAVE_STATUS_LABELS = {
+  loading: "正在读取",
+  idle: "配置已同步",
+  saving: "正在保存",
+  saved: "已保存",
+  error: "保存失败",
+} as const;
+
 export function SettingsWindow() {
-  const { settings, error, isLoading, refresh } = useAppSettings();
+  const {
+    settings,
+    error,
+    saveStatus,
+    isLoading,
+    refresh,
+    update,
+    reset,
+  } = useAppSettings();
+  const [activePage, setActivePage] =
+    useState<SettingsPageId>("general");
+  const [actionError, setActionError] = useState<string>();
+  const [autostartBusy, setAutostartBusy] = useState(false);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const autostartCheckedRef = useRef(false);
+  const settingsContentRef = useRef<HTMLDivElement>(null);
+
+  const activeNavigation = useMemo(
+    () =>
+      SETTINGS_NAVIGATION.find((item) => item.id === activePage) ??
+      SETTINGS_NAVIGATION[0],
+    [activePage],
+  );
 
   useEffect(() => {
     let active = true;
@@ -20,7 +74,7 @@ export function SettingsWindow() {
     void settingsWindow
       .onFocusChanged(({ payload: focused }) => {
         if (focused) {
-          void refresh();
+          void refresh().catch(() => undefined);
         }
       })
       .then((nextUnlisten) => {
@@ -37,75 +91,189 @@ export function SettingsWindow() {
     };
   }, [refresh]);
 
-  const savedPosition = !settings
-    ? "读取中…"
-    : settings.petPositionX === null || settings.petPositionY === null
-      ? "尚未保存"
-      : `${settings.petPositionX}, ${settings.petPositionY}`;
+  useEffect(() => {
+    settingsContentRef.current?.scrollTo({ top: 0 });
+  }, [activePage]);
+
+  useEffect(() => {
+    if (!settings || autostartCheckedRef.current) {
+      return;
+    }
+
+    autostartCheckedRef.current = true;
+    void isLaunchAtStartupEnabled()
+      .then(async (actual) => {
+        if (actual !== settings.launchAtStartup) {
+          await update({ launchAtStartup: actual });
+        }
+      })
+      .catch((caught) => {
+        setActionError(`无法读取开机启动状态：${String(caught)}`);
+      });
+  }, [settings, update]);
+
+  const updateSetting = useCallback(
+    async (patch: AppSettingsPatch) => {
+      setActionError(undefined);
+      try {
+        await update(patch);
+      } catch (caught) {
+        setActionError(`设置保存失败：${String(caught)}`);
+      }
+    },
+    [update],
+  );
+
+  const handleToggleAutostart = useCallback(
+    async (enabled: boolean) => {
+      setAutostartBusy(true);
+      setActionError(undefined);
+
+      try {
+        await setLaunchAtStartup(enabled);
+        await refresh();
+      } catch (caught) {
+        setActionError(`开机启动修改失败：${String(caught)}`);
+      } finally {
+        setAutostartBusy(false);
+      }
+    },
+    [refresh],
+  );
+
+  const handleCenterPet = useCallback(async () => {
+    setActionError(undefined);
+    try {
+      await centerPetWindow();
+    } catch (caught) {
+      setActionError(`恢复桌宠位置失败：${String(caught)}`);
+    }
+  }, []);
+
+  const handleReset = useCallback(async () => {
+    setResetting(true);
+    setActionError(undefined);
+    const previousAutostart = settings?.launchAtStartup ?? false;
+    let autostartWasChanged = false;
+    let settingsWereReset = false;
+
+    try {
+      if (previousAutostart) {
+        await setLaunchAtStartup(false);
+        autostartWasChanged = true;
+      }
+      await reset();
+      settingsWereReset = true;
+      await centerPetWindow();
+      setResetDialogOpen(false);
+    } catch (caught) {
+      if (autostartWasChanged && !settingsWereReset) {
+        await setLaunchAtStartup(previousAutostart).catch(() => undefined);
+        await refresh().catch(() => undefined);
+      }
+      setActionError(`恢复默认设置失败：${String(caught)}`);
+    } finally {
+      setResetting(false);
+    }
+  }, [refresh, reset, settings?.launchAtStartup]);
+
+  function renderPage() {
+    if (!settings) {
+      return (
+        <div className="settings-loading" aria-busy={isLoading}>
+          <span className="settings-loading__mark" aria-hidden="true" />
+          <strong>{isLoading ? "正在读取本地设置" : "无法载入设置"}</strong>
+          <p>Shadow Companion 正在准备统一配置快照。</p>
+        </div>
+      );
+    }
+
+    switch (activePage) {
+      case "general":
+        return (
+          <GeneralPage
+            settings={settings}
+            autostartBusy={autostartBusy}
+            onUpdate={updateSetting}
+            onToggleAutostart={handleToggleAutostart}
+            onRequestReset={() => setResetDialogOpen(true)}
+            onExit={() => {
+              void exitApplication();
+            }}
+          />
+        );
+      case "pet":
+        return (
+          <PetSettingsPage
+            settings={settings}
+            onUpdate={updateSetting}
+            onCenterPet={handleCenterPet}
+          />
+        );
+      case "sync-mode":
+        return <SyncModePage />;
+      case "life-mode":
+        return <LifeModePage />;
+      case "characters":
+        return <CharactersPage />;
+      case "performance":
+        return (
+          <PerformancePage
+            settings={settings}
+            onUpdate={updateSetting}
+          />
+        );
+      case "about":
+        return <AboutPage />;
+    }
+  }
+
+  const visibleError = actionError ?? error;
 
   return (
-    <main className="settings-window">
-      <header className="settings-header">
-        <div>
-          <p className="settings-kicker">SHADOW COMPANION</p>
-          <h1>基础应用骨架</h1>
-          <p>
-            Phase 1 只验证窗口生命周期、桌宠拖动、右键入口和统一配置存储。
-            正式导航与设置页面将在 Phase 2 实现。
-          </p>
-        </div>
-        <span className="phase-badge">PHASE 1</span>
-      </header>
+    <main className="settings-shell">
+      <SettingsSidebar
+        activePage={activePage}
+        onNavigate={setActivePage}
+      />
 
-      <section className="foundation-grid" aria-busy={isLoading}>
-        <article>
-          <span>当前角色占位</span>
-          <strong>{settings?.currentCharacterId ?? "读取中…"}</strong>
-        </article>
-        <article>
-          <span>当前模式</span>
-          <strong>{settings?.currentMode ?? "读取中…"}</strong>
-        </article>
-        <article>
-          <span>保存的桌宠坐标</span>
-          <strong>{savedPosition}</strong>
-        </article>
-        <article>
-          <span>位置状态</span>
-          <strong>
-            {settings?.positionLocked ? "已锁定" : "可拖动"}
-          </strong>
-        </article>
-      </section>
+      <section className="settings-main">
+        <header className="settings-page-header">
+          <div>
+            <span>{activeNavigation.eyebrow}</span>
+            <h1>{activeNavigation.title}</h1>
+            <p>{activeNavigation.description}</p>
+          </div>
+          <div
+            className={`save-status save-status--${saveStatus}`}
+            aria-live="polite"
+          >
+            <span aria-hidden="true" />
+            {SAVE_STATUS_LABELS[saveStatus]}
+          </div>
+        </header>
 
-      <section className="lifecycle-panel">
-        <h2>窗口生命周期测试</h2>
-        <p>
-          最小化或点击标题栏关闭按钮后，桌宠和应用进程应继续运行。只有“退出应用”
-          会完整结束进程。
-        </p>
-        <div className="settings-actions">
-          <button type="button" onClick={() => void minimizeSettingsWindow()}>
-            最小化窗口
-          </button>
-          <button
-            type="button"
-            className="button-secondary"
-            onClick={() => void hideSettingsWindow()}
-          >
-            隐藏窗口
-          </button>
-          <button
-            type="button"
-            className="button-danger"
-            onClick={() => void exitApplication()}
-          >
-            退出应用
-          </button>
+        <div ref={settingsContentRef} className="settings-content">
+          {visibleError ? (
+            <div className="settings-error" role="alert">
+              {visibleError}
+            </div>
+          ) : null}
+          {renderPage()}
         </div>
       </section>
 
-      {error ? <p className="settings-error">{error}</p> : null}
+      <ConfirmDialog
+        open={resetDialogOpen}
+        title="恢复全部默认设置？"
+        description="这会重置桌宠外观、位置、开机启动和所有已保存偏好。此操作无法自动撤销。"
+        confirmLabel="确认恢复"
+        busy={resetting}
+        onCancel={() => setResetDialogOpen(false)}
+        onConfirm={() => {
+          void handleReset();
+        }}
+      />
     </main>
   );
 }

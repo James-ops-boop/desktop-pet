@@ -1,8 +1,11 @@
 .pet-window {
   position: relative;
-  width: 100%;
-  height: 100%;
+  width: 380px;
+  height: 380px;
   overflow: hidden;
+  opacity: var(--pet-opacity, 1);
+  transform: scale(var(--pet-scale, 1));
+  transform-origin: top left;
   user-select: none;
   cursor: grab;
 }
@@ -14,6 +17,11 @@
 .pet-window--locked,
 .pet-window--locked:active {
   cursor: default;
+}
+
+.pet-visual {
+  position: absolute;
+  inset: 0;
 }
 
 .pet-aura {
