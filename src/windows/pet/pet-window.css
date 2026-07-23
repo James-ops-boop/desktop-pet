@@ -1,0 +1,152 @@
+.pet-window {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  user-select: none;
+  cursor: grab;
+}
+
+.pet-window:active {
+  cursor: grabbing;
+}
+
+.pet-window--locked,
+.pet-window--locked:active {
+  cursor: default;
+}
+
+.pet-aura {
+  position: absolute;
+  top: 35px;
+  left: 50%;
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  background: rgba(77, 79, 214, 0.22);
+  filter: blur(34px);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.pet-placeholder {
+  position: absolute;
+  inset: 18px 28px 22px;
+  overflow: hidden;
+  border: 1px solid rgba(131, 143, 238, 0.36);
+  border-radius: 48% 48% 28px 28px / 34% 34% 28px 28px;
+  background:
+    radial-gradient(circle at 50% 26%, rgba(89, 90, 210, 0.26), transparent 37%),
+    linear-gradient(165deg, rgba(20, 25, 52, 0.96), rgba(7, 10, 25, 0.94));
+  box-shadow: 0 22px 48px rgba(2, 3, 14, 0.4);
+}
+
+.pet-hood {
+  position: absolute;
+  top: 42px;
+  left: 50%;
+  width: 156px;
+  height: 150px;
+  border-radius: 58% 58% 44% 44% / 52% 52% 72% 72%;
+  background: linear-gradient(145deg, #2c345e, #090e24 66%);
+  box-shadow:
+    inset 0 0 0 3px rgba(110, 119, 190, 0.2),
+    0 18px 35px rgba(0, 1, 10, 0.52);
+  transform: translateX(-50%);
+  z-index: 3;
+}
+
+.pet-face {
+  position: absolute;
+  top: 42px;
+  left: 50%;
+  width: 86px;
+  height: 70px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 50%;
+  background: #040716;
+  transform: translateX(-50%);
+}
+
+.pet-face span {
+  width: 7px;
+  height: 37px;
+  margin-top: 15px;
+  border-radius: 999px;
+  background: linear-gradient(#aab4ff, #5961e3);
+  box-shadow: 0 0 14px rgba(111, 123, 255, 0.9);
+  transform: rotate(10deg);
+}
+
+.pet-face span:last-child {
+  transform: rotate(-10deg);
+}
+
+.pet-shoulders {
+  position: absolute;
+  top: 155px;
+  left: 50%;
+  width: 246px;
+  height: 120px;
+  border-radius: 48% 48% 16px 16px;
+  background: linear-gradient(150deg, #202947, #080d20 70%);
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+.pet-desk {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 54px;
+  height: 54px;
+  border-top: 2px solid rgba(129, 139, 217, 0.46);
+  border-radius: 8px 8px 18px 18px;
+  background: linear-gradient(#242b48, #11162b);
+  z-index: 4;
+}
+
+.pet-caption {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #dfe3ff;
+  z-index: 5;
+}
+
+.pet-caption strong {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+.pet-caption span {
+  color: #9199bc;
+  font-size: 10px;
+}
+
+.pet-status {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  max-width: 320px;
+  min-height: 18px;
+  padding: 3px 8px;
+  color: #b9c0ef;
+  font-size: 10px;
+  text-align: center;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.pet-drag-surface {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+}

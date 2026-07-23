@@ -1,0 +1,58 @@
+:root {
+  font-family:
+    Inter, "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif;
+  color: #eef1ff;
+  background: transparent;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  background: transparent;
+}
+
+body {
+  overflow: hidden;
+}
+
+button {
+  min-height: 38px;
+  border: 1px solid rgba(137, 154, 255, 0.45);
+  border-radius: 8px;
+  padding: 0 16px;
+  color: #f4f5ff;
+  background: linear-gradient(135deg, #5e64dd, #754fc4);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+button:hover {
+  border-color: rgba(185, 196, 255, 0.9);
+  filter: brightness(1.08);
+}
+
+button:focus-visible {
+  outline: 2px solid #aab2ff;
+  outline-offset: 2px;
+}
+
+.button-secondary {
+  color: #cdd2f4;
+  background: #252b48;
+}
+
+.button-danger {
+  border-color: rgba(255, 115, 144, 0.45);
+  background: #5a2941;
+}

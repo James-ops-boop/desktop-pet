@@ -1,0 +1,122 @@
+.settings-window {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  padding: 42px;
+  color: #edf0ff;
+  background:
+    radial-gradient(circle at 92% 0%, rgba(92, 73, 192, 0.22), transparent 34%),
+    #101426;
+}
+
+.settings-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.settings-header > div {
+  max-width: 620px;
+}
+
+.settings-kicker {
+  margin: 0 0 6px;
+  color: #929bed;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.16em;
+}
+
+.settings-header h1 {
+  margin: 0 0 10px;
+  font-size: 30px;
+}
+
+.settings-header p:last-child,
+.lifecycle-panel p {
+  margin: 0;
+  color: #a9b0ca;
+  line-height: 1.65;
+}
+
+.phase-badge {
+  border: 1px solid rgba(141, 151, 242, 0.32);
+  border-radius: 999px;
+  padding: 7px 12px;
+  color: #bbc2ff;
+  background: rgba(63, 67, 130, 0.32);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.foundation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 28px 0 16px;
+}
+
+.foundation-grid article,
+.lifecycle-panel {
+  border: 1px solid rgba(121, 132, 220, 0.22);
+  border-radius: 14px;
+  background: rgba(25, 31, 58, 0.78);
+}
+
+.foundation-grid article {
+  min-height: 92px;
+  padding: 18px;
+}
+
+.foundation-grid span {
+  display: block;
+  margin-bottom: 9px;
+  color: #8991b4;
+  font-size: 12px;
+}
+
+.foundation-grid strong {
+  color: #e2e5ff;
+  font-size: 16px;
+}
+
+.lifecycle-panel {
+  padding: 22px;
+}
+
+.lifecycle-panel h2 {
+  margin: 0 0 8px;
+  font-size: 17px;
+}
+
+.settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.settings-error {
+  border: 1px solid rgba(255, 112, 144, 0.42);
+  border-radius: 10px;
+  padding: 12px;
+  color: #ffb4c5;
+  background: rgba(87, 25, 48, 0.42);
+}
+
+@media (max-width: 640px) {
+  .settings-window {
+    padding: 26px;
+  }
+
+  .settings-header {
+    flex-direction: column;
+  }
+
+  .foundation-grid {
+    grid-template-columns: 1fr;
+  }
+}

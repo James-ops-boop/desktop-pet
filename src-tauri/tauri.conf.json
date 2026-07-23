@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "pet",
-        "title": "Shadow Companion - Phase 0 Pet",
+        "title": "Shadow Companion",
         "url": "index.html",
         "width": 380,
         "height": 380,
@@ -23,17 +23,19 @@
         "shadow": false,
         "alwaysOnTop": true,
         "skipTaskbar": true,
-        "resizable": true,
+        "resizable": false,
         "maximizable": false,
         "minimizable": false,
         "visible": true
       },
       {
         "label": "settings",
-        "title": "Shadow Companion - Phase 0 Settings",
+        "title": "Shadow Companion",
         "url": "index.html",
         "width": 760,
         "height": 540,
+        "minWidth": 640,
+        "minHeight": 460,
         "center": true,
         "transparent": false,
         "decorations": true,
@@ -44,7 +46,7 @@
     ],
     "security": {
       "csp": null,
-      "capabilities": ["phase0"]
+      "capabilities": ["pet", "settings"]
     }
   },
   "bundle": {

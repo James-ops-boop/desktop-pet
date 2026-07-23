@@ -4,9 +4,15 @@ import { readFileSync } from "node:fs";
 const tauriConfig = JSON.parse(
   readFileSync(new URL("../src-tauri/tauri.conf.json", import.meta.url), "utf8"),
 );
-const capability = JSON.parse(
+const petCapability = JSON.parse(
   readFileSync(
-    new URL("../src-tauri/capabilities/phase0.json", import.meta.url),
+    new URL("../src-tauri/capabilities/pet.json", import.meta.url),
+    "utf8",
+  ),
+);
+const settingsCapability = JSON.parse(
+  readFileSync(
+    new URL("../src-tauri/capabilities/settings.json", import.meta.url),
     "utf8",
   ),
 );
@@ -47,14 +53,37 @@ assert.equal(
 );
 
 assert.deepEqual(
-  [...capability.windows].sort(),
-  ["pet", "settings"],
-  "the phase 0 capability must target both windows",
+  petCapability.windows,
+  ["pet"],
+  "the pet capability must target the pet window",
 );
-assert.ok(
-  capability.permissions.includes("store:default"),
-  "the official Store permission set is required",
+for (const permission of [
+  "store:allow-load",
+  "store:allow-get",
+  "store:allow-set",
+  "store:allow-save",
+]) {
+  assert.ok(
+    petCapability.permissions.includes(permission),
+    `the pet requires ${permission}`,
+  );
+}
+assert.deepEqual(
+  settingsCapability.windows,
+  ["settings"],
+  "the settings capability must target the settings window",
 );
+for (const permission of [
+  "store:allow-load",
+  "store:allow-get",
+  "store:allow-set",
+  "store:allow-save",
+]) {
+  assert.ok(
+    settingsCapability.permissions.includes(permission),
+    `the settings window requires ${permission}`,
+  );
+}
 assert.match(
   cargoManifest,
   /tauri-plugin-single-instance\s*=\s*"2"/,
