@@ -61,7 +61,7 @@ export function GeneralPage({
 
         <SettingRow
           title="启动动画"
-          description="设置会立即保存，并在阶段 4 动画系统接入后生效。"
+          description="设置会立即保存；阶段 4 动画控制器已接入该启动偏好。"
           badge="阶段 4"
         >
           <ToggleField

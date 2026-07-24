@@ -159,8 +159,8 @@ assert.match(
 );
 assert.match(
   previewPanel,
-  /阶段 4 接入动画播放/,
-  "action preview must keep real animation outside Phase 3",
+  /character-action-preview/,
+  "the Phase 3 action preview surface must remain available",
 );
 
 assert.match(
@@ -190,8 +190,8 @@ assert.match(
 );
 assert.match(
   sidebar,
-  /PHASE 3/,
-  "the settings footer must show the current phase",
+  /PHASE [34]/,
+  "the settings footer must not regress below Phase 3",
 );
 
 assert.equal(

@@ -1,34 +1,45 @@
 import { Menu } from "@tauri-apps/api/menu";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { PET_SCALE_OPTIONS } from "../../config/defaultSettings";
+import type { CompanionMode } from "../../models/settings";
 
 export const PET_MENU_IDS = {
   openSettings: "pet.open-settings",
+  mode: "pet.mode",
   scale: "pet.scale",
   toggleAlwaysOnTop: "pet.toggle-always-on-top",
   togglePositionLock: "pet.toggle-position-lock",
+  toggleAnimationPaused: "pet.toggle-animation-paused",
   exitApplication: "pet.exit-application",
 } as const;
 
 interface PetContextMenuOptions {
+  currentMode: CompanionMode;
   petScale: number;
   alwaysOnTop: boolean;
   positionLocked: boolean;
+  animationPaused: boolean;
   onOpenSettings: () => void;
+  onSetMode: (mode: CompanionMode) => void;
   onSetScale: (scale: number) => void;
   onToggleAlwaysOnTop: () => void;
   onTogglePositionLock: () => void;
+  onToggleAnimationPaused: () => void;
   onExitApplication: () => void;
 }
 
 export async function popupPetContextMenu({
+  currentMode,
   petScale,
   alwaysOnTop,
   positionLocked,
+  animationPaused,
   onOpenSettings,
+  onSetMode,
   onSetScale,
   onToggleAlwaysOnTop,
   onTogglePositionLock,
+  onToggleAnimationPaused,
   onExitApplication,
 }: PetContextMenuOptions): Promise<void> {
   const menu = await Menu.new({
@@ -37,6 +48,27 @@ export async function popupPetContextMenu({
         id: PET_MENU_IDS.openSettings,
         text: "打开主设置",
         action: onOpenSettings,
+      },
+      {
+        item: "Separator",
+      },
+      {
+        id: PET_MENU_IDS.mode,
+        text: "桌宠模式",
+        items: [
+          {
+            id: `${PET_MENU_IDS.mode}.sync`,
+            text: "同步模式 A",
+            checked: currentMode === "sync",
+            action: () => onSetMode("sync"),
+          },
+          {
+            id: `${PET_MENU_IDS.mode}.life`,
+            text: "生活模式 B",
+            checked: currentMode === "life",
+            action: () => onSetMode("life"),
+          },
+        ],
       },
       {
         id: PET_MENU_IDS.scale,
@@ -58,6 +90,11 @@ export async function popupPetContextMenu({
         id: PET_MENU_IDS.togglePositionLock,
         text: positionLocked ? "解锁位置" : "锁定位置",
         action: onTogglePositionLock,
+      },
+      {
+        id: PET_MENU_IDS.toggleAnimationPaused,
+        text: animationPaused ? "继续动画" : "暂停动画",
+        action: onToggleAnimationPaused,
       },
       {
         item: "Separator",

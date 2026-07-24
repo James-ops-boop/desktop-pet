@@ -270,8 +270,9 @@
 .character-card__portrait img {
   width: 100%;
   height: 100%;
-  opacity: 0.68;
-  object-fit: cover;
+  padding: 5px;
+  opacity: 0.84;
+  object-fit: contain;
 }
 
 .character-card__portrait > span {
@@ -384,8 +385,9 @@
 .character-preview__visual img {
   width: 100%;
   height: 100%;
-  opacity: 0.82;
-  object-fit: cover;
+  padding: 8px 22px 0;
+  opacity: 0.88;
+  object-fit: contain;
   filter: hue-rotate(0deg) saturate(0.86);
 }
 
@@ -579,6 +581,13 @@
     color-mix(in srgb, var(--character-accent) 42%, #39435c);
   border-radius: 50%;
   color: var(--character-accent);
+  overflow: hidden;
+}
+
+.character-action-frame > span img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .character-action-frame strong {

@@ -10,6 +10,7 @@ import { PET_SCALE_OPTIONS } from "../../config/defaultSettings";
 import type {
   AppSettings,
   AppSettingsPatch,
+  CompanionMode,
   DefaultStartMode,
 } from "../../models/settings";
 
@@ -30,6 +31,11 @@ const START_MODE_OPTIONS = [
   { value: "last-used", label: "沿用上次模式" },
 ] as const;
 
+const CURRENT_MODE_CHOICES = [
+  { value: "sync", label: "同步模式 A" },
+  { value: "life", label: "生活模式 B" },
+] as const;
+
 export function PetSettingsPage({
   settings,
   onUpdate,
@@ -44,21 +50,25 @@ export function PetSettingsPage({
     <div className="settings-page">
       <SettingsSection
         title="模式"
-        description="模式视觉和手动切换会在阶段 4 接入；此处先建立启动偏好。"
+        description="模式只由用户手动切换；程序不会根据输入状态自动改变形态。"
       >
         <SettingRow
           title="当前模式"
-          description="阶段 3 仍保持只读，避免提前实现动画状态切换。"
-          badge="阶段 4"
+          description="切换时会安全淡出当前画面，再载入另一套分层资源。"
         >
-          <span className="value-pill">
-            {settings.currentMode === "sync" ? "同步模式" : "生活模式"}
-          </span>
+          <ChoiceGroup
+            label="当前模式"
+            value={settings.currentMode}
+            options={CURRENT_MODE_CHOICES}
+            onChange={(value) => {
+              void onUpdate({ currentMode: value as CompanionMode });
+            }}
+          />
         </SettingRow>
 
         <SettingRow
           title="默认启动模式"
-          description="设置立即保存，模式系统接入后用于决定启动形态。"
+          description="设置立即保存，用于后续启动时决定初始形态。"
         >
           <SelectField
             label="默认启动模式"

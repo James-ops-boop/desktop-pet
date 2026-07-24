@@ -2,6 +2,7 @@ import {
   CHARACTER_ACTION_IDS,
   type CharacterManifest,
 } from "../../models/character";
+import { OMEN_ANIMATION_PACK } from "./animation";
 
 export const OMEN_MANIFEST = {
   schemaVersion: 1,
@@ -16,29 +17,19 @@ export const OMEN_MANIFEST = {
   assetHealth: "ready",
   availabilityNote: "第一版可使用角色",
   description:
-    "安静、克制的控场者。阶段 3 使用原创几何占位视觉，正式 Q 版资源与动作将在阶段 4 接入。",
+    "安静、克制的控场者。阶段 4 已接入原创 Q 版占位视觉、分层道具资源与可扩展动画框架。",
   theme: {
     accent: "#8175f5",
     aura: "#4e68d8",
   },
   assets: {
-    portrait: "/assets/characters/common/portrait-placeholder.svg",
-    preview: "/assets/characters/common/preview-placeholder.svg",
+    portrait: OMEN_ANIMATION_PACK.layers.character.src,
+    preview: OMEN_ANIMATION_PACK.layers.character.src,
   },
   supportedModes: ["sync", "life"],
   supportedActions: CHARACTER_ACTION_IDS,
   exclusiveActions: ["shadow"],
-  animationResources: {
-    idle: null,
-    keyboard: null,
-    mouse: null,
-    study: null,
-    gaming: null,
-    coffee: null,
-    meal: null,
-    sleep: null,
-    shadow: null,
-  },
+  animationResources: OMEN_ANIMATION_PACK.previewResources,
   defaultScale: 1,
   effects: {
     shadowEnabled: true,

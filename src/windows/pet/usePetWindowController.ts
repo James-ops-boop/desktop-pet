@@ -7,12 +7,19 @@ import {
   PhysicalPosition,
 } from "@tauri-apps/api/window";
 import type { AppSettings } from "../../models/settings";
+import type { CompanionMode } from "../../models/settings";
 import { centerPetWindowWithoutSaving } from "../../services/window/windowCommands";
 import { useAppSettings } from "../../state/useAppSettings";
 
 const POSITION_SAVE_DELAY_MS = 220;
 const PET_DESIGN_SIZE = 380;
 const petWindow = getCurrentWindow();
+
+interface PetGestureCallbacks {
+  onClick: () => void;
+  onDragStart: () => void;
+  onDragEnd: () => void;
+}
 
 async function applyWindowAppearance(settings: AppSettings) {
   await petWindow.setSize(
@@ -227,7 +234,10 @@ export function usePetWindowController() {
   }, [cancelPendingPositionSave, settings, update]);
 
   const startDrag = useCallback(
-    async (event: ReactMouseEvent<HTMLElement>) => {
+    async (
+      event: ReactMouseEvent<HTMLElement>,
+      callbacks: PetGestureCallbacks,
+    ) => {
       if (
         event.button !== 0 ||
         latestSettingsRef.current?.positionLocked
@@ -235,9 +245,31 @@ export function usePetWindowController() {
         return;
       }
 
+      let feedbackTimer: number | undefined;
+      let dragFeedbackStarted = false;
       try {
+        const startedAt = performance.now();
+        const startPosition = await petWindow.outerPosition();
+        feedbackTimer = window.setTimeout(() => {
+          dragFeedbackStarted = true;
+          callbacks.onDragStart();
+        }, 120);
+
         setPositionStatus("dragging");
         await petWindow.startDragging();
+        window.clearTimeout(feedbackTimer);
+        const endPosition = await petWindow.outerPosition();
+        const moved =
+          Math.abs(endPosition.x - startPosition.x) > 3 ||
+          Math.abs(endPosition.y - startPosition.y) > 3;
+
+        if (!moved && performance.now() - startedAt < 650) {
+          callbacks.onClick();
+          setPositionStatus((current) =>
+            current === "dragging" ? "idle" : current,
+          );
+        }
+
         setWindowError(undefined);
         window.setTimeout(() => {
           setPositionStatus((current) =>
@@ -247,6 +279,13 @@ export function usePetWindowController() {
       } catch (caught) {
         setPositionStatus("idle");
         setWindowError(String(caught));
+      } finally {
+        if (feedbackTimer !== undefined) {
+          window.clearTimeout(feedbackTimer);
+        }
+        if (dragFeedbackStarted) {
+          callbacks.onDragEnd();
+        }
       }
     },
     [],
@@ -277,6 +316,13 @@ export function usePetWindowController() {
     [update],
   );
 
+  const setMode = useCallback(
+    async (currentMode: CompanionMode) => {
+      await update({ currentMode });
+    },
+    [update],
+  );
+
   return {
     settings,
     error: windowError ?? settingsError,
@@ -285,5 +331,6 @@ export function usePetWindowController() {
     togglePositionLock,
     toggleAlwaysOnTop,
     setPetScale,
+    setMode,
   };
 }

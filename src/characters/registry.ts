@@ -61,10 +61,17 @@ export interface CharacterRegistry {
 
 function isSafeAssetPath(path: string): boolean {
   return (
-    path.startsWith("/assets/characters/") &&
+    (path.startsWith("/assets/characters/") ||
+      path.startsWith("/assets/props/")) &&
     !path.includes("..") &&
     !path.includes("\\") &&
     !path.includes("://")
+  );
+}
+
+function isSafeCharacterAssetPath(path: string): boolean {
+  return (
+    path.startsWith("/assets/characters/") && isSafeAssetPath(path)
   );
 }
 
@@ -98,8 +105,8 @@ function assertManifest(manifest: CharacterManifest): void {
     throw new Error(`character ${manifest.id} has an invalid aura color`);
   }
   if (
-    !isSafeAssetPath(manifest.assets.portrait) ||
-    !isSafeAssetPath(manifest.assets.preview)
+    !isSafeCharacterAssetPath(manifest.assets.portrait) ||
+    !isSafeCharacterAssetPath(manifest.assets.preview)
   ) {
     throw new Error(`character ${manifest.id} has an unsafe asset path`);
   }

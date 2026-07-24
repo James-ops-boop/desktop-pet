@@ -47,6 +47,9 @@ export function CharacterPreviewPanel({
   const selectedActionDefinition = CHARACTER_ACTIONS.find(
     (action) => action.id === selectedAction,
   );
+  const selectedActionResource = selectedAction
+    ? character.animationResources[selectedAction]
+    : null;
 
   return (
     <article
@@ -57,9 +60,13 @@ export function CharacterPreviewPanel({
       <div className="character-preview__visual">
         <img src={character.assets.preview} alt="" aria-hidden="true" />
         <div className="character-preview__visual-copy">
-          <span>PHASE 3 PREVIEW FRAME</span>
+          <span>PHASE 4 RESOURCE PREVIEW</span>
           <strong>{character.names.en}</strong>
-          <small>阶段 4 接入正式 Q 版资源与动画</small>
+          <small>
+            {character.id === "omen"
+              ? "原创 Q 版占位资源 · 可替换分层动画框架"
+              : "角色资源仍在制作中"}
+          </small>
         </div>
       </div>
 
@@ -105,7 +112,9 @@ export function CharacterPreviewPanel({
             <strong>同步模式</strong>
             <small>
               {character.supportedModes.includes("sync")
-                ? "计划支持 · 键盘与鼠标"
+                ? character.id === "omen"
+                  ? "已接入 · 键盘与鼠标"
+                  : "计划支持 · 键盘与鼠标"
                 : "尚未制作"}
             </small>
           </div>
@@ -120,7 +129,9 @@ export function CharacterPreviewPanel({
             <strong>生活模式</strong>
             <small>
               {character.supportedModes.includes("life")
-                ? "计划支持 · 作息与活动"
+                ? character.id === "omen"
+                  ? "已接入 · 无固定键鼠"
+                  : "计划支持 · 作息与活动"
                 : "尚未制作"}
             </small>
           </div>
@@ -164,14 +175,22 @@ export function CharacterPreviewPanel({
         </div>
 
         <div className="character-action-frame" aria-live="polite">
-          <span aria-hidden="true">◇</span>
+          <span aria-hidden="true">
+            {selectedActionResource ? (
+              <img src={selectedActionResource} alt="" />
+            ) : (
+              "◇"
+            )}
+          </span>
           <div>
             <strong>
               {selectedActionDefinition?.label ?? "暂无可预览动作"}
             </strong>
             <p>
               {selectedActionDefinition
-                ? `${selectedActionDefinition.description} 阶段 4 接入动画播放。`
+                ? selectedActionResource
+                  ? `${selectedActionDefinition.description} 占位资源映射已接入；完整动作在阶段 7 扩展。`
+                  : `${selectedActionDefinition.description} 当前尚无可用资源。`
                 : "该占位角色尚未配置动作资源。"}
             </p>
           </div>

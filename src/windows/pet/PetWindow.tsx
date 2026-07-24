@@ -1,5 +1,7 @@
 import type { CSSProperties, MouseEvent } from "react";
 import { resolveCurrentCharacter } from "../../characters/registry";
+import { AnimatedPetStage } from "../../components/pet/AnimatedPetStage";
+import { useAnimationController } from "../../services/animation-controller/useAnimationController";
 import {
   exitApplication,
   showSettingsWindow,
@@ -22,17 +24,26 @@ export function PetWindow() {
     togglePositionLock,
     toggleAlwaysOnTop,
     setPetScale,
+    setMode,
   } = usePetWindowController();
+  const animation = useAnimationController(
+    settings?.currentMode ?? "sync",
+  );
 
   async function openContextMenu(event: MouseEvent<HTMLElement>) {
     event.preventDefault();
 
     await popupPetContextMenu({
+      currentMode: settings?.currentMode ?? "sync",
       petScale: settings?.petScale ?? 1,
       alwaysOnTop: settings?.alwaysOnTop ?? true,
       positionLocked: settings?.positionLocked ?? false,
+      animationPaused: animation.snapshot.paused,
       onOpenSettings: () => {
         void showSettingsWindow();
+      },
+      onSetMode: (mode) => {
+        void setMode(mode);
       },
       onSetScale: (scale) => {
         void setPetScale(scale);
@@ -42,6 +53,9 @@ export function PetWindow() {
       },
       onTogglePositionLock: () => {
         void togglePositionLock();
+      },
+      onToggleAnimationPaused: () => {
+        animation.setPaused(!animation.snapshot.paused);
       },
       onExitApplication: () => {
         void exitApplication();
@@ -66,31 +80,32 @@ export function PetWindow() {
       onContextMenu={(event) => {
         void openContextMenu(event);
       }}
-      aria-label={`${character.names.en} Shadow Companion desktop pet placeholder`}
+      aria-label={`${character.names.en} Shadow Companion desktop pet，${
+        animation.snapshot.mode === "sync" ? "同步模式" : "生活模式"
+      }`}
     >
       <div className="pet-visual">
-        <div className="pet-aura" aria-hidden="true" />
-        <section className="pet-placeholder">
-          <div className="pet-hood">
-            <div className="pet-face" aria-hidden="true">
-              <span />
-              <span />
-              <span />
-            </div>
-          </div>
-          <div className="pet-shoulders" aria-hidden="true" />
-          <div className="pet-desk" aria-hidden="true" />
-          <div className="pet-caption">
-            <strong>
-              {character.names.en} · {character.names.zhCN} · 占位桌宠
-            </strong>
-            <span>
-              {settings?.positionLocked
+        <AnimatedPetStage
+          character={character}
+          animation={animation.snapshot}
+          idleAnimationEnabled={settings?.idleAnimationEnabled ?? true}
+          startupAnimationEnabled={
+            settings?.startupAnimationEnabled ?? true
+          }
+        />
+        <div className="pet-caption">
+          <strong>
+            {character.names.en} · {character.names.zhCN} ·{" "}
+            {animation.snapshot.mode === "sync" ? "SYNC A" : "LIFE B"}
+          </strong>
+          <span>
+            {animation.snapshot.paused
+              ? "动画已暂停 · 右键继续"
+              : settings?.positionLocked
                 ? "位置已锁定 · 右键解锁"
-                : "拖动移动 · 右键菜单"}
-            </span>
-          </div>
-        </section>
+                : "单击互动 · 拖动移动"}
+          </span>
+        </div>
       </div>
 
       <div className="pet-status" aria-live="polite">
@@ -101,7 +116,13 @@ export function PetWindow() {
       </div>
       <div
         className="pet-drag-surface"
-        onMouseDown={startDrag}
+        onMouseDown={(event) => {
+          void startDrag(event, {
+            onClick: animation.triggerClick,
+            onDragStart: animation.beginDrag,
+            onDragEnd: animation.endDrag,
+          });
+        }}
         aria-hidden="true"
       />
     </main>
