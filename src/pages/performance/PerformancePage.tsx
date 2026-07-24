@@ -37,7 +37,7 @@ export function PerformancePage({
   return (
     <div className="settings-page">
       <div className="phase-notice">
-        <span>阶段 2 配置</span>
+        <span>已保存偏好</span>
         <p>
           下列偏好会立即保存；真实帧率控制、全屏检测和低性能渲染策略将在阶段 8
           接入。

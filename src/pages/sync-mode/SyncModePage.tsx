@@ -17,7 +17,7 @@ export function SyncModePage() {
       <ComingSoonPanel
         phase="PHASE 5"
         title="同步模式输入系统"
-        description="本页结构已经就位，但不会在阶段 2 提前监听键盘或鼠标。阶段 5 将只映射输入类别，不记录实际输入内容。"
+        description="本页结构已经就位，但当前阶段不会监听键盘或鼠标。阶段 5 将只映射输入类别，不记录实际输入内容。"
         items={SYNC_ITEMS}
       />
     </div>

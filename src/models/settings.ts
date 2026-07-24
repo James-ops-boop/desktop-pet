@@ -7,6 +7,7 @@ import {
   SETTINGS_SCHEMA_VERSION,
   SUPPORTED_MODES,
 } from "../config/defaultSettings";
+import { normalizeCurrentCharacterId } from "../characters/registry";
 
 export type CompanionMode = "sync" | "life";
 export type DefaultStartMode = CompanionMode | "last-used";
@@ -75,17 +76,6 @@ function validEnum<T extends string>(
   fallback: T,
 ): T {
   return allowed.includes(value as T) ? (value as T) : fallback;
-}
-
-function validCharacterId(value: unknown): string {
-  if (typeof value !== "string") {
-    return DEFAULT_APP_SETTINGS.currentCharacterId;
-  }
-
-  const normalized = value.trim().toLowerCase();
-  return /^[a-z0-9-]{1,64}$/.test(normalized)
-    ? normalized
-    : DEFAULT_APP_SETTINGS.currentCharacterId;
 }
 
 function validScale(value: unknown): number {
@@ -202,7 +192,9 @@ export function normalizeAppSettings(candidate: unknown): AppSettings {
 
   return {
     schemaVersion: SETTINGS_SCHEMA_VERSION,
-    currentCharacterId: validCharacterId(source.currentCharacterId),
+    currentCharacterId: normalizeCurrentCharacterId(
+      source.currentCharacterId,
+    ),
     currentMode: validEnum(
       source.currentMode,
       SUPPORTED_MODES,

@@ -1,4 +1,5 @@
 import type { CSSProperties, MouseEvent } from "react";
+import { resolveCurrentCharacter } from "../../characters/registry";
 import {
   exitApplication,
   showSettingsWindow,
@@ -52,6 +53,9 @@ export function PetWindow() {
     "--pet-scale": settings?.petScale ?? 1,
     "--pet-opacity": settings?.petOpacity ?? 1,
   };
+  const character = resolveCurrentCharacter(
+    settings?.currentCharacterId,
+  );
 
   return (
     <main
@@ -62,7 +66,7 @@ export function PetWindow() {
       onContextMenu={(event) => {
         void openContextMenu(event);
       }}
-      aria-label="Shadow Companion desktop pet placeholder"
+      aria-label={`${character.names.en} Shadow Companion desktop pet placeholder`}
     >
       <div className="pet-visual">
         <div className="pet-aura" aria-hidden="true" />
@@ -77,7 +81,9 @@ export function PetWindow() {
           <div className="pet-shoulders" aria-hidden="true" />
           <div className="pet-desk" aria-hidden="true" />
           <div className="pet-caption">
-            <strong>OMEN · 占位桌宠</strong>
+            <strong>
+              {character.names.en} · {character.names.zhCN} · 占位桌宠
+            </strong>
             <span>
               {settings?.positionLocked
                 ? "位置已锁定 · 右键解锁"

@@ -4,6 +4,7 @@ import type {
   DefaultStartMode,
   EffectsLevel,
 } from "../models/settings";
+import { DEFAULT_CHARACTER_ID } from "../characters/registry";
 
 export const SETTINGS_SCHEMA_VERSION = 2;
 
@@ -27,7 +28,7 @@ export const EFFECTS_LEVELS: readonly EffectsLevel[] = [
 
 export const DEFAULT_APP_SETTINGS: Readonly<AppSettings> = Object.freeze({
   schemaVersion: SETTINGS_SCHEMA_VERSION,
-  currentCharacterId: "omen",
+  currentCharacterId: DEFAULT_CHARACTER_ID,
   currentMode: "sync",
   defaultStartMode: "sync",
   petScale: 1,

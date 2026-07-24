@@ -48,7 +48,7 @@ export function PetSettingsPage({
       >
         <SettingRow
           title="当前模式"
-          description="阶段 2 保持只读，避免提前实现动画状态切换。"
+          description="阶段 3 仍保持只读，避免提前实现动画状态切换。"
           badge="阶段 4"
         >
           <span className="value-pill">

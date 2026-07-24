@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" role="img" aria-labelledby="title description">
+  <title id="title">Shadow Companion 大型角色预览占位图</title>
+  <desc id="description">原创的深色几何轮廓，用于阶段三角色预览框架。</desc>
+  <defs>
+    <radialGradient id="preview-aura" cx=".5" cy=".42" r=".58">
+      <stop offset="0" stop-color="#8175f5" stop-opacity=".35"/>
+      <stop offset="1" stop-color="#11172a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="preview-body" x1=".2" y1=".1" x2=".8" y2=".95">
+      <stop offset="0" stop-color="#263255"/>
+      <stop offset="1" stop-color="#101528"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="480" rx="44" fill="#0d1220"/>
+  <rect x="20" y="20" width="600" height="440" rx="34" fill="none" stroke="#8190c7" stroke-opacity=".12"/>
+  <circle cx="320" cy="216" r="190" fill="url(#preview-aura)"/>
+  <path d="M320 74 449 169 405 359H235L191 169Z" fill="url(#preview-body)" stroke="#8175f5" stroke-opacity=".34" stroke-width="3"/>
+  <ellipse cx="320" cy="211" rx="77" ry="69" fill="#080b15"/>
+  <g fill="none" stroke="#9e96ff" stroke-linecap="round" stroke-width="16">
+    <path d="M282 184 276 243"/>
+    <path d="M320 176 319 247"/>
+    <path d="M358 184 364 243"/>
+  </g>
+  <path d="M132 398h376" stroke="#8175f5" stroke-opacity=".24" stroke-width="2"/>
+  <path d="M164 416h312" stroke="#8175f5" stroke-opacity=".12" stroke-width="2"/>
+</svg>

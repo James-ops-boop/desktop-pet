@@ -54,8 +54,8 @@ export const SETTINGS_NAVIGATION: readonly SettingsNavigationItem[] = [
     index: "05",
     label: "角色",
     eyebrow: "CHARACTERS",
-    title: "角色",
-    description: "角色注册表、筛选和确认使用流程将在阶段 3 实现。",
+    title: "角色选择",
+    description: "浏览角色注册表，按职业筛选并确认当前桌宠。",
   },
   {
     id: "performance",

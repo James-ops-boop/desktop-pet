@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-labelledby="title description">
+  <title id="title">Shadow Companion 角色头像占位图</title>
+  <desc id="description">由圆环、菱形和三条光纹构成的原创几何占位图。</desc>
+  <defs>
+    <linearGradient id="portrait-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#202a47"/>
+      <stop offset="1" stop-color="#0c1020"/>
+    </linearGradient>
+    <linearGradient id="portrait-accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#a59cff"/>
+      <stop offset="1" stop-color="#6075e8"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="36" fill="url(#portrait-bg)"/>
+  <circle cx="100" cy="96" r="61" fill="none" stroke="#6d72b5" stroke-opacity=".34" stroke-width="2"/>
+  <path d="M100 42 151 79 132 145H68L49 79Z" fill="#151a32" stroke="#7773cc" stroke-opacity=".48" stroke-width="2"/>
+  <ellipse cx="100" cy="97" rx="34" ry="30" fill="#090c18"/>
+  <g fill="none" stroke="url(#portrait-accent)" stroke-linecap="round" stroke-width="8">
+    <path d="M83 85 80 109"/>
+    <path d="M100 82 99 111"/>
+    <path d="M117 85 119 109"/>
+  </g>
+  <path d="M52 163h96" stroke="#7b75dd" stroke-opacity=".34" stroke-width="2"/>
+</svg>

@@ -10,7 +10,8 @@
     "test:phase0": "node scripts/verify-phase0.mjs",
     "test:phase1": "node scripts/verify-phase1.mjs",
     "test:phase2": "node scripts/verify-phase2.mjs",
-    "check": "npm run test && npm run test:phase0 && npm run test:phase1 && npm run test:phase2 && npm run build",
+    "test:phase3": "node scripts/verify-phase3.mjs",
+    "check": "npm run test && npm run test:phase0 && npm run test:phase1 && npm run test:phase2 && npm run test:phase3 && npm run build",
     "preview": "vite preview",
     "tauri": "tauri"
   },

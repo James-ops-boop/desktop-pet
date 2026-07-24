@@ -10,7 +10,7 @@ export function AboutPage() {
         <div>
           <span>WINDOWS DESKTOP COMPANION</span>
           <h2>Shadow Companion</h2>
-          <p>版本 0.1.0 · 阶段 2</p>
+          <p>版本 0.1.0 · 阶段 3</p>
         </div>
       </section>
 

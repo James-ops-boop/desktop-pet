@@ -68,6 +68,30 @@ describe("normalizeAppSettings", () => {
     });
   });
 
+  it("only accepts registered and available current characters", () => {
+    expect(
+      normalizeAppSettings({
+        ...DEFAULT_APP_SETTINGS,
+        currentCharacterId: " OMEN ",
+      }).currentCharacterId,
+    ).toBe("omen");
+
+    for (const currentCharacterId of [
+      "jett",
+      "sage",
+      "killjoy",
+      "unknown-agent",
+      "../../omen",
+    ]) {
+      expect(
+        normalizeAppSettings({
+          ...DEFAULT_APP_SETTINGS,
+          currentCharacterId,
+        }).currentCharacterId,
+      ).toBe("omen");
+    }
+  });
+
   it("rounds continuous settings to their supported steps", () => {
     const normalized = normalizeAppSettings({
       ...DEFAULT_APP_SETTINGS,
@@ -177,5 +201,14 @@ describe("mergeAppSettings", () => {
     expect(next.petPositionY).toBe(180);
     expect(next.currentCharacterId).toBe("omen");
     expect(next.frameRateLimit).toBe(60);
+  });
+
+  it("cannot persist a registered but unavailable character", () => {
+    const next = mergeAppSettings(
+      normalizeAppSettings(DEFAULT_APP_SETTINGS),
+      { currentCharacterId: "jett" },
+    );
+
+    expect(next.currentCharacterId).toBe("omen");
   });
 });

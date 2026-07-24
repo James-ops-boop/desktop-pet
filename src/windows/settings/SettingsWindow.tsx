@@ -124,6 +124,19 @@ export function SettingsWindow() {
     [update],
   );
 
+  const handleActivateCharacter = useCallback(
+    async (id: string) => {
+      setActionError(undefined);
+      try {
+        await update({ currentCharacterId: id });
+      } catch (caught) {
+        setActionError(`角色启用失败：${String(caught)}`);
+        throw caught;
+      }
+    },
+    [update],
+  );
+
   const handleToggleAutostart = useCallback(
     async (enabled: boolean) => {
       setAutostartBusy(true);
@@ -215,7 +228,12 @@ export function SettingsWindow() {
       case "life-mode":
         return <LifeModePage />;
       case "characters":
-        return <CharactersPage />;
+        return (
+          <CharactersPage
+            currentCharacterId={settings.currentCharacterId}
+            onSetCurrentCharacter={handleActivateCharacter}
+          />
+        );
       case "performance":
         return (
           <PerformancePage

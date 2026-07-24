@@ -44,7 +44,7 @@ export function SettingsSidebar({
       </nav>
 
       <div className="settings-sidebar__footer">
-        <span>PHASE 2</span>
+        <span>PHASE 3</span>
         <strong>v0.1.0</strong>
       </div>
     </aside>
